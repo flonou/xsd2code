@@ -382,6 +382,7 @@ namespace Xsd2Code.Library
             this.Miscellaneous.ExcludeIncludedTypes = false;
             this.TrackingChanges.PropertyChanged += TrackingChangesPropertyChanged;
             this.Serialization.DefaultEncoder = DefaultEncoder.UTF8;
+            this.OtherOutputFilesPaths = new List<string>();
         }
 
         /// <summary>
@@ -428,6 +429,14 @@ namespace Xsd2Code.Library
         /// <value>The input file path.</value>
         [Browsable(false)]
         public string InputFilePath { get; set; }
+
+        /// <summary>
+        /// Gets the output other files paths (included or imported).
+        /// </summary>
+        /// <value>The output file path.</value>
+        [Browsable(false)]
+        public List<string> OtherOutputFilesPaths { get; }
+
 
         /// <summary>
         /// Gets or sets collection type to use for code generation

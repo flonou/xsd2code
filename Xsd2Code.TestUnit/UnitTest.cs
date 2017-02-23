@@ -831,6 +831,64 @@ namespace Xsd2Code.TestUnit
             }
         }
 
+        [TestMethod]
+        public void Includes()
+        {
+            lock (testLock)
+            {
+
+                // Get the code namespace for the schema.
+                string tvShowInputFilePath = GetInputFilePath("TVShow.xsd", Resources.TVShow);
+
+                var tvShowGeneratorParams = GetGeneratorParams(tvShowInputFilePath);
+                GetGeneratorParams(tvShowInputFilePath);
+
+                tvShowGeneratorParams.Miscellaneous.EnableSummaryComment = true;
+                tvShowGeneratorParams.TargetFramework = TargetFramework.Net35;
+                tvShowGeneratorParams.PropertyParams.AutomaticProperties = true;
+                tvShowGeneratorParams.EnableInitializeFields = true;
+                tvShowGeneratorParams.CollectionObjectType = CollectionType.List;
+                tvShowGeneratorParams.OutputFilePath = Path.ChangeExtension(tvShowGeneratorParams.InputFilePath, ".includes.cs");
+
+                var tvShowXsdGen = new GeneratorFacade(tvShowGeneratorParams);
+                var tvShowResult = tvShowXsdGen.Generate();
+                Assert.IsTrue(tvShowResult.Success, tvShowResult.Messages.ToString());
+
+                // Get the code namespace for the schema.
+                string inputFilePath = GetInputFilePath("AnimatedShow.xsd", Resources.AnimatedShow);
+
+                var animatedShowGeneratorParams = GetGeneratorParams(inputFilePath);
+                GetGeneratorParams(inputFilePath);
+
+                animatedShowGeneratorParams.Miscellaneous.EnableSummaryComment = true;
+                animatedShowGeneratorParams.TargetFramework = TargetFramework.Net35;
+                animatedShowGeneratorParams.PropertyParams.AutomaticProperties = true;
+                animatedShowGeneratorParams.EnableInitializeFields = true;
+                animatedShowGeneratorParams.CollectionObjectType = CollectionType.List;
+                animatedShowGeneratorParams.OutputFilePath = Path.ChangeExtension(animatedShowGeneratorParams.InputFilePath, ".includes.cs");
+
+                var animatedShowXsdGen = new GeneratorFacade(animatedShowGeneratorParams);
+                var animatedShowResult = animatedShowXsdGen.Generate();
+                Assert.IsTrue(animatedShowResult.Success, animatedShowResult.Messages.ToString());
+
+
+                var compileResult = CompileCSFile(tvShowGeneratorParams.OutputFilePath);
+                Assert.IsTrue(compileResult.Success, compileResult.Messages.ToString());
+                compileResult = CompileCSFile(animatedShowGeneratorParams.OutputFilePath);
+                Assert.IsTrue(compileResult.Success, compileResult.Messages.ToString());
+
+                compileResult = CompileCSFile(animatedShowGeneratorParams.OutputFilePath, animatedShowGeneratorParams.OutputFilePath);
+                Assert.IsTrue(compileResult.Success, compileResult.Messages.ToString());
+
+                List<string> filesToCompile = new List<string>();
+                filesToCompile.Add(tvShowGeneratorParams.OutputFilePath);
+                filesToCompile.Add(animatedShowGeneratorParams.OutputFilePath);
+                filesToCompile.AddRange(animatedShowGeneratorParams.OtherOutputFilesPaths);
+                compileResult = CompileCSFile(filesToCompile.ToArray());
+                Assert.IsTrue(compileResult.Success, compileResult.Messages.ToString());
+            }
+        }
+
 
         private static string GetInputFilePath(string resourceFileName, string fileContent)
         {
@@ -879,26 +937,33 @@ namespace Xsd2Code.TestUnit
         /// </summary>
         /// <param name="filePath">CS file path</param>
         /// <returns></returns>
-        static private Result<string> CompileCSFile(string filePath)
+        static private Result<string> CompileCSFile(params string[] filesPaths)
         {
             var result = new Result<string>(null, true);
-            var file = new FileInfo(filePath);
-            if (!file.Exists)
+            string firstFileName = null;
+            foreach (string filePath in filesPaths)
             {
-                result.Success = false;
-                result.Messages.Add(MessageType.Error, "Input file \"{0}\" does not exist", filePath);
+                var file = new FileInfo(filePath);
+                if (!file.Exists)
+                {
+                    result.Success = false;
+                    result.Messages.Add(MessageType.Error, "Input file \"{0}\" does not exist", filePath);
+                    break;
+                }
+                if (firstFileName == null)
+                    firstFileName = file.FullName;
             }
             if (result.Success)
             {
                 try
                 {
 
-                    var outputPath = Path.ChangeExtension(file.FullName, ".dll");
+                    var outputPath = Path.ChangeExtension(firstFileName, ".dll");
                     result.Entity = outputPath;
                     var csc = new CSharpCodeProvider(new Dictionary<string, string>() { { "CompilerVersion", "v3.5" } });
                     var parameters = new CompilerParameters(new[] { "mscorlib.dll", "System.dll", "System.Core.dll", "System.Xml.dll", "WindowsBase.dll", "System.Runtime.Serialization.dll" }, outputPath, true);
                     parameters.GenerateExecutable = false;
-                    CompilerResults results = csc.CompileAssemblyFromFile(parameters, filePath);
+                    CompilerResults results = csc.CompileAssemblyFromFile(parameters, filesPaths);
                     if (results.Errors.HasErrors)
                     {
                         result.Success = false;
