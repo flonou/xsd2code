@@ -86,6 +86,16 @@ namespace Xsd2Code.Library.Helpers
                 case "dotnet35":
                 case "dotnet3.5":
                     return TargetFramework.Net35;
+                case "netcore":
+                case ".netcore":
+                case "dotnetcore":
+                case ".netcore1.0":
+                case "netcore1.0":
+                case "dotnetcore1.0":
+                case ".netcore10":
+                case "netcore10":
+                case "dotnetcore10":
+                    return TargetFramework.NetCore10;
             }
 
             return ToEnum<TargetFramework>(input);

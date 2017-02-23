@@ -27,6 +27,9 @@ namespace Xsd2Code.Library
         Net40,
 
         [Description("Silverlight")]
-        Silverlight
+        Silverlight,
+
+        [Description(".NetCore 1.0")]
+        NetCore10
     }
 }

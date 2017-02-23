@@ -152,6 +152,8 @@ namespace Xsd2Code.Library.Extensions
                     this.RemoveDefaultXmlAttributes(type.CustomAttributes);
                 }
 
+                this.RemoveUnsupportedXmlAttributes(type.CustomAttributes);
+
                 if (!type.IsClass && !type.IsStruct) continue;
 
                 this.ProcessClass(code, schema, type);
@@ -1064,9 +1066,9 @@ namespace Xsd2Code.Library.Extensions
                                                   });
 
             tryExpression.Add(writeLineMethodInvoke);
-            var closeMethodInvoke = CodeDomHelper.GetInvokeMethod("streamWriter", "Close");
+            var disposeMethodInvoke = CodeDomHelper.GetInvokeMethod("streamWriter", "Dispose");
 
-            tryExpression.Add(closeMethodInvoke);
+            tryExpression.Add(disposeMethodInvoke);
 
             var finallyStatmanentsCol = new CodeStatementCollection();
             finallyStatmanentsCol.Add(CodeDomHelper.GetDispose("streamWriter"));
@@ -1310,8 +1312,8 @@ namespace Xsd2Code.Library.Extensions
                 new CodeTypeReference(typeof(string)), "xmlString", readToEndInvoke);
 
             tryStatmanentsCol.Add(xmlString);
-            tryStatmanentsCol.Add(CodeDomHelper.GetInvokeMethod("sr", "Close"));
-            tryStatmanentsCol.Add(CodeDomHelper.GetInvokeMethod("file", "Close"));
+            tryStatmanentsCol.Add(CodeDomHelper.GetInvokeMethod("sr", "Dispose"));
+            tryStatmanentsCol.Add(CodeDomHelper.GetInvokeMethod("file", "Dispose"));
 
             // ------------------------------------------------------
             // return Deserialize(xmlString, out obj, out exception);
@@ -1578,6 +1580,15 @@ namespace Xsd2Code.Library.Extensions
             }
 
             code.Name = GeneratorContext.GeneratorParams.NameSpace;
+        }
+
+        /// <summary>
+        /// Remove attributes not tupported by the targetted framework
+        /// </summary>
+        /// <param name="customAttributes"></param>
+        protected virtual void RemoveUnsupportedXmlAttributes(CodeAttributeDeclarationCollection customAttributes)
+        {
+            // abstract
         }
 
         /// <summary>
@@ -2391,8 +2402,8 @@ namespace Xsd2Code.Library.Extensions
                 if (xmlSubElement != null) return xmlSubElement;
             }
 
-            // If not found search in schema inclusion
-            foreach (var item in schema.Includes)
+                // If not found search in schema inclusion
+                foreach (var item in schema.Includes)
             {
                 var schemaInc = item as XmlSchemaInclude;
 
