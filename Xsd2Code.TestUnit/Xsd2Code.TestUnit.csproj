@@ -75,22 +75,25 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="UnitTest.cs" />
-    <Compile Include="xsd\ArrayOfArray.Designer.cs" />
+    <None Include="xsd\ArrayOfArray.Designer.cs" />
     <Compile Include="xsd\CircularClassReference.Designer.cs" />
     <Compile Include="xsd\dvd.designer.cs" />
-    <Compile Include="xsd\Gender.cs">
+    <None Include="xsd\Gender.cs">
       <DependentUpon>Gender.xsd</DependentUpon>
+    </None>
+    <Compile Include="xsd\Gender.designer.cs">
+      <DependentUpon>Gender.cs</DependentUpon>
     </Compile>
-    <Compile Include="xsd\hexBinary.designer.cs" />
+    <None Include="xsd\hexBinary.designer.cs" />
     <Compile Include="xsd\Hierarchical.cs">
       <DependentUpon>Hierarchical.xsd</DependentUpon>
     </Compile>
-    <Compile Include="xsd\LazyLoading.designer.cs" />
-    <Compile Include="xsd\mailxml_base.designer.cs" />
-    <Compile Include="xsd\PersonTypeAnnotation.designer.cs" />
+    <None Include="xsd\LazyLoading.designer.cs" />
+    <None Include="xsd\mailxml_base.designer.cs" />
+    <None Include="xsd\PersonTypeAnnotation.designer.cs" />
     <Compile Include="xsd\ReproSchema.Designer.cs" />
-    <Compile Include="xsd\TestOptionalElement.designer.cs" />
-    <Compile Include="xsd\XMLSchema.designer.cs" />
+    <None Include="xsd\TestOptionalElement.designer.cs" />
+    <None Include="xsd\XMLSchema.designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -112,6 +115,9 @@
     </Content>
     <Content Include="xsd\Actor.xsd" />
     <Content Include="xsd\Circular.xsd" />
+    <None Include="xsd\AnimatedShow.xsd">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="xsd\dvd.xsx">
       <DependentUpon>dvd.xsd</DependentUpon>
     </None>
@@ -142,6 +148,9 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="xsd\TestOptionalElement.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="xsd\TVShow.xsd">
       <SubType>Designer</SubType>
     </None>
     <None Include="xsd\XMLSchema.xsd">
