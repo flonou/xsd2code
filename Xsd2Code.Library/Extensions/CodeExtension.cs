@@ -1023,7 +1023,7 @@ namespace Xsd2Code.Library.Extensions
             if (GeneratorContext.GeneratorParams.Serialization.EnableEncoding)
             {
                 // ----------------------------------------------------------------
-                // streamWriter = new StreamWriter(fileName, false, Encoding.UTF8);
+                // streamWriter = new StreamWriter(File.OpenWrite(fileName), Encoding.UTF8);
                 // ----------------------------------------------------------------
                 tryExpression.Add(new CodeAssignStatement(
                                       new CodeVariableReferenceExpression("streamWriter"),
@@ -1031,8 +1031,10 @@ namespace Xsd2Code.Library.Extensions
                                           typeof(StreamWriter),
                                           new CodeExpression[]
                                               {
-                                                  new CodeSnippetExpression("fileName"),
-                                                  new CodeSnippetExpression("false"),
+                                                  CodeDomHelper.GetInvokeStaticMethod(typeof(File),"OpenWrite", new CodeExpression[]
+                                                    {
+                                                    new CodeSnippetExpression("fileName")
+                                              }),
                                                   new CodeSnippetExpression(GeneratorContext.GeneratorParams.Serialization.GetEncoderString())
                         })));
             }

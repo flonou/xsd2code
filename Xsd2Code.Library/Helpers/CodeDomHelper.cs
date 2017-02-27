@@ -78,6 +78,7 @@ namespace Xsd2Code.Library.Helpers
             return GetInvokeMethod(targetObject, methodName, null);
         }
 
+
         /// <summary>
         /// Get CodeMethodInvokeExpression
         /// </summary>
@@ -93,6 +94,36 @@ namespace Xsd2Code.Library.Helpers
                           new CodeMethodReferenceExpression(new CodeVariableReferenceExpression(targetObject), methodName), parameters)
                     : new CodeMethodInvokeExpression(
                           new CodeMethodReferenceExpression(new CodeVariableReferenceExpression(targetObject), methodName));
+
+            return methodInvoke;
+        }
+
+        /// <summary>
+        /// Get CodeMethodInvokeExpression
+        /// </summary>
+        /// <param name="type">Type on which to call the method</param>
+        /// <param name="methodName">Name of method to invoke</param>
+        /// <returns>CodeMethodInvokeExpression value</returns>
+        internal static CodeMethodInvokeExpression GetInvokeStaticMethod(Type type, string methodName)
+        {
+            return GetInvokeStaticMethod(type, methodName, null);
+        }
+
+        /// <summary>
+        /// Get CodeMethodInvokeExpression
+        /// </summary>
+        /// <param name="type">Type on which to call the method</param>
+        /// <param name="methodName">Name of method to invoke</param>
+        /// <param name="parameters">method params</param>
+        /// <returns>CodeMethodInvokeExpression value</returns>
+        internal static CodeMethodInvokeExpression GetInvokeStaticMethod(Type type, string methodName, CodeExpression[] parameters)
+        {
+            var methodInvoke =
+                parameters != null
+                    ? new CodeMethodInvokeExpression(
+                        new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(type), methodName), parameters)
+                    : new CodeMethodInvokeExpression(
+                        new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(type), methodName));
 
             return methodInvoke;
         }
