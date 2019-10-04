@@ -4,19 +4,16 @@
 // </copyright>
 //------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using Xsd2Code.ConfigurationForm;
 using Xsd2Code.Library;
 using Xsd2Code.Library.Helpers;
@@ -55,25 +52,25 @@ namespace Xsd2Code.vsPackage
                 throw new ArgumentNullException("package");
             }
 
-            this.Package = package;
+            Package = package;
 
-           
+
         }
 
         private async Task RegisterCommand()
         {
-            IMenuCommandService commandService = await this.Package.GetServiceAsync(typeof(IMenuCommandService)) as IMenuCommandService;
+            IMenuCommandService commandService = await Package.GetServiceAsync(typeof(IMenuCommandService)) as IMenuCommandService;
             if (commandService != null)
             {
                 var menuCommandID = new CommandID(CommandSet, CommandId);
-                var menuItem = new OleMenuCommand(this.MenuItemCallback, menuCommandID); // using OleMenuCommand to have access to BeforeQueryStatus
+                var menuItem = new OleMenuCommand(MenuItemCallback, menuCommandID); // using OleMenuCommand to have access to BeforeQueryStatus
                 menuItem.BeforeQueryStatus += menuCommand_BeforeQueryStatus;
                 // Switch to Main Thread before calling AddCommand which calls GetService() which should
                 // always be called on UI thread.
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 commandService.AddCommand(menuItem);
             }
-            Dte = (DTE) await Package.GetServiceAsync(typeof(DTE));
+            Dte = (DTE)await Package.GetServiceAsync(typeof(DTE));
         }
 
         /// <summary>
@@ -109,7 +106,7 @@ namespace Xsd2Code.vsPackage
         /// </summary>
         private void openConfigurationWindow()
         {
-           
+
             ProjectItem proitem = Dte.SelectedItems.Item(1).ProjectItem;
             Project proj = proitem.ContainingProject;
             string projectDirectory = Path.GetDirectoryName(proj.FullName);
@@ -183,8 +180,12 @@ namespace Xsd2Code.vsPackage
             DialogResult result = frm.ShowDialog();
 
             GeneratorParams generatorParams = frm.GeneratorParams.Clone();
-            generatorParams.InputFilePath = xsdFileName;
-
+            List<string> inputFiles = new List<string>();
+            for (int i = 1; i < Dte.SelectedItems.Count; ++i)
+            {
+                inputFiles.Add(Dte.SelectedItems.Item(i).ProjectItem.FileNames[0]);
+            }
+            generatorParams.InputFilePaths = inputFiles;
             var gen = new GeneratorFacade(generatorParams);
 
             bool foundOutputFile = false;
@@ -195,7 +196,7 @@ namespace Xsd2Code.vsPackage
                 {
                     // Close file if open in IDE
                     ProjectItem projElmts = null;
-                    if (!String.IsNullOrEmpty(outputFile))
+                    if (!string.IsNullOrEmpty(outputFile))
                     {
                         string rootedOutputFile = Path.IsPathRooted(outputFile) ? outputFile : Path.Combine(projectDirectory, outputFile);
                         foundOutputFile = FindInProject(proj.ProjectItems, rootedOutputFile, out projElmts);

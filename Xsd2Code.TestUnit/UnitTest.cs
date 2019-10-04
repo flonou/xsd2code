@@ -1,15 +1,15 @@
-using Microsoft.CSharp;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
+using Microsoft.CSharp;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xsd2Code.Library;
 using Xsd2Code.Library.Helpers;
 using Xsd2Code.TestUnit.Properties;
-using System.Reflection;
 
 namespace Xsd2Code.TestUnit
 {
@@ -36,7 +36,7 @@ namespace Xsd2Code.TestUnit
         /// </summary>
         private static string OutputFolder
         {
-            get { return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),"testtemp"); }
+            get { return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "testtemp"); }
         }
 
         /// <summary>
@@ -314,23 +314,23 @@ namespace Xsd2Code.TestUnit
                 Exception exp;
                 DvdCollection deserialiseDvd;
 
-                var testEncodings = new [] {
+                var testEncodings = new[] {
                   Encoding.ASCII, Encoding.UTF8, Encoding.Unicode, Encoding.UTF32
                 };
                 foreach (var encoding in testEncodings)
                 {
-                  var encodedFile = Path.Combine(OutputFolder, "dvd" + encoding.EncodingName + ".xml");
-                  dvd.SaveToFile(encodedFile, encoding);
-                  if (!DvdCollection.LoadFromFile(encodedFile, encoding, out deserialiseDvd, out exp))
-                  {
-                    Assert.Fail("LoadFromFile failed on {0} encoding", encoding.EncodingName);
-                  }
-                  else if (!deserialiseDvd.Dvds[0].Title.Equals("Matrix יא?"))
-                  {
-                   Assert.Fail("LoadFromFile failed on {0} encoding", encoding.EncodingName);
-                  }                
+                    var encodedFile = Path.Combine(OutputFolder, "dvd" + encoding.EncodingName + ".xml");
+                    dvd.SaveToFile(encodedFile, encoding);
+                    if (!DvdCollection.LoadFromFile(encodedFile, encoding, out deserialiseDvd, out exp))
+                    {
+                        Assert.Fail("LoadFromFile failed on {0} encoding", encoding.EncodingName);
+                    }
+                    else if (!deserialiseDvd.Dvds[0].Title.Equals("Matrix יא?"))
+                    {
+                        Assert.Fail("LoadFromFile failed on {0} encoding", encoding.EncodingName);
+                    }
                 }
-                
+
                 var compileResult = CompileCSFile(generatorParams.OutputFilePath);
                 Assert.IsTrue(compileResult.Success, compileResult.Messages.ToString());
 
@@ -678,16 +678,19 @@ namespace Xsd2Code.TestUnit
 
                 var compileResult = CompileCSFile(generatorParams.OutputFilePath);
                 Assert.IsTrue(compileResult.Success, compileResult.Messages.ToString());
-                
+
                 // check if autogeneration-parameters are written to file
                 var lastGenerationParamsFile = Path.ChangeExtension(inputFilePath, "xsd.xsd2code");
-                if (File.Exists(lastGenerationParamsFile)) {
+                if (File.Exists(lastGenerationParamsFile))
+                {
                     if (File.GetLastWriteTime(lastGenerationParamsFile) > File.GetLastWriteTime(generatorParams.OutputFilePath))
                     {
                         File.Delete(lastGenerationParamsFile);
                         File.Copy(generatorParams.OutputFilePath, lastGenerationParamsFile);
                     }
-                } else {
+                }
+                else
+                {
                     File.Copy(generatorParams.OutputFilePath, lastGenerationParamsFile);
                 }
 
@@ -868,7 +871,6 @@ namespace Xsd2Code.TestUnit
                 GetInputFilePath("Gender.xsd", Resources.Gender);
 
                 var tvShowGeneratorParams = GetGeneratorParams(tvShowInputFilePath);
-                GetGeneratorParams(tvShowInputFilePath);
 
                 tvShowGeneratorParams.Miscellaneous.EnableSummaryComment = true;
                 tvShowGeneratorParams.TargetFramework = TargetFramework.Net35;
@@ -887,7 +889,6 @@ namespace Xsd2Code.TestUnit
                 string inputFilePath = GetInputFilePath("AnimatedShow.xsd", Resources.AnimatedShow);
 
                 var animatedShowGeneratorParams = GetGeneratorParams(inputFilePath);
-                GetGeneratorParams(inputFilePath);
 
                 animatedShowGeneratorParams.Miscellaneous.EnableSummaryComment = true;
                 animatedShowGeneratorParams.TargetFramework = TargetFramework.Net35;
@@ -919,23 +920,78 @@ namespace Xsd2Code.TestUnit
             }
         }
 
+        [TestMethod]
+        public void MultipleGenerationWithMultipleFiles()
+        {
+            lock (testLock)
+            {
+
+                // Get the code namespace for the schema.
+                string tvShowInputFilePath = GetInputFilePath("TVShow.xsd", Resources.TVShow);
+                string animatedShowInputFilePath = GetInputFilePath("AnimatedShow.xsd", Resources.AnimatedShow);
+                // copy included/imported files to the test folder
+                GetInputFilePath("Actor.xsd", Resources.Actor);
+                GetInputFilePath("Gender.xsd", Resources.Gender);
+
+                var tvShowGeneratorParams = GetGeneratorParams(new List<string> { tvShowInputFilePath, animatedShowInputFilePath });
+
+                tvShowGeneratorParams.Miscellaneous.EnableSummaryComment = true;
+                tvShowGeneratorParams.TargetFramework = TargetFramework.Net35;
+                tvShowGeneratorParams.PropertyParams.AutomaticProperties = true;
+                tvShowGeneratorParams.EnableInitializeFields = true;
+                tvShowGeneratorParams.GenerateSeparateFiles = true;
+                tvShowGeneratorParams.CollectionObjectType = CollectionType.List;
+                tvShowGeneratorParams.OutputFilePath = Path.Combine(Path.GetDirectoryName(tvShowInputFilePath), "includes.cs");
+
+                var tvShowXsdGen = new GeneratorFacade(tvShowGeneratorParams);
+                var tvShowResult = tvShowXsdGen.Generate();
+                List<string> tvShowOutputFiles = tvShowResult.Entity;
+                Assert.IsTrue(tvShowResult.Success, tvShowResult.Messages.ToString());
+
+                // Get the code namespace for the schema.
+
+                // compile TV show
+                var compileResult = CompileCSFile(tvShowOutputFiles.ToArray());
+                Assert.IsTrue(compileResult.Success, compileResult.Messages.ToString());
+            }
+        }
+
 
         private static string GetInputFilePath(string resourceFileName, string fileContent)
         {
             lock (fileLock)
             {
-              if (!Directory.Exists(OutputFolder))
-              {
-                Directory.CreateDirectory(OutputFolder);
-              }
+                if (!Directory.Exists(OutputFolder))
+                {
+                    Directory.CreateDirectory(OutputFolder);
+                }
 
-              using (var sw = new StreamWriter(Path.Combine(OutputFolder, resourceFileName), false))
+                using (var sw = new StreamWriter(Path.Combine(OutputFolder, resourceFileName), false))
                 {
                     sw.Write(fileContent);
                 }
 
                 return Path.Combine(OutputFolder, resourceFileName);
             }
+        }
+
+        private static GeneratorParams GetGeneratorParams(List<string> inputFilePaths)
+        {
+            var generatorParams = new GeneratorParams
+            {
+                InputFilePaths = inputFilePaths,
+                NameSpace = CodeGenerationNamespace,
+                TargetFramework = TargetFramework.Net20,
+                CollectionObjectType = CollectionType.ObservableCollection,
+                EnableDataBinding = true,
+                GenerateDataContracts = true,
+                GenerateCloneMethod = true,
+                OutputFilePath = GetOutputFilePath(inputFilePaths[0])
+            };
+            generatorParams.Miscellaneous.HidePrivateFieldInIde = true;
+            generatorParams.Miscellaneous.DisableDebug = true;
+            generatorParams.Serialization.Enabled = true;
+            return generatorParams;
         }
 
         private static GeneratorParams GetGeneratorParams(string inputFilePath)
